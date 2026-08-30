@@ -77,13 +77,12 @@ training paths from episodes 1, 10, and 100.
 
 \section{Q-learning method}
 
-For a transition from $s$ to $s'$ after action $a$, the code applies the off-policy Q-learning update from
-the lecture:
+For a transition from $s$ to $s'$ after action $a$, the code applies the off-policy Q-learning update from:
 \begin{equation}
-Q(s,a)\leftarrow Q(s,a)+\alpha\left[r+\gamma\max_{a'\in A(s')}Q(s',a')-Q(s,a)\right].
+Q(s,a)\leftarrow Q(s,a)+\alpha\left[r+\gamma\max_{a'}Q(s',a')-Q(s,a)\right].
 \end{equation}
-Only permitted actions are included in $A(s')$. At the goal, the future term is zero. For the first update, all
-stored values are zero, so
+In the maximum term, the program checks only moves available from the next cell. It ignores moves into walls
+or outside the maze. At the goal, the future term is zero. For the first update, all stored values are zero, so
 \[
 Q_{\mathrm{new}}=0+0.40[-1+0.90(0)-0]=-0.40.
 \]
