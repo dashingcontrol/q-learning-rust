@@ -1,12 +1,12 @@
 # Q-learning maze in Rust
 
 This is the implementation of the Q-Learning in Rust with following parameters.
-
--- Episodes: 100
--- `alpha`: 0.5 - Learning rate
--- `gamma`: 0.9
--- `epsilon`: 0.4 -> 0.02 decaying
--- Reward: -1 per step.
+-Parameters
+  - Episodes: 100
+  - `alpha`: 0.5 - Learning rate
+  - `gamma`: 0.9
+  - `epsilon`: 0.4 -> 0.02 decaying
+- Reward: -1 per step.
 
 It uses one 6 x 6 maze and saves the items requested on slide 40:
 Q-values before, midway through, and after training, plus the paths from episodes 1, 10, and 100.

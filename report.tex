@@ -1,0 +1,160 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage[a4paper,top=16mm,bottom=15mm,left=20mm,right=20mm]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+\setlist[itemize]{leftmargin=5mm,itemsep=1pt,topsep=1pt}
+\renewcommand{\arraystretch}{1.06}
+\captionsetup{font=small,labelfont=bf,hypcap=false}
+\setlength{\intextsep}{5pt}
+\setlength{\textfloatsep}{6pt}
+\raggedbottom
+\titleformat{\section}{\large\bfseries}{\thesection}{0.65em}{}
+\titlespacing*{\section}{0pt}{7pt}{2pt}
+\pagestyle{plain}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Q-learning in one maze\par}
+  \vspace{5pt}
+  {\normalsize Name: Lukasz Baldyga \rule{34mm}{0.4pt}\hfill
+  Student ID: B24D-5026 \rule{24mm}{0.4pt}\par}
+\end{center}
+
+\section{Implementation:}
+
+The Q-learning is implemented in \textbf{Rust} language with some Python libraries for visualization.
+
+The code is in: https://github.com/dashingcontrol/q-learning-rust
+
+The main file with the algorithm (written as a learning practice for myself in rust) is in main.rs file.
+
+\section{Introduction}
+
+The agent learns a route through one $6\times6$ maze. An open cell is a state. The available actions are up,
+down, left, and right, but the program selects only moves that lead to another open cell. The start is
+$S=(5,0)$ and the goal is $G=(0,5)$. Each move receives reward $-1$, so a shorter successful route has a
+larger return.
+
+Rust handles training and CSV export. Python only reads the saved data and draws the figures. Following slide
+40, the program records Q-values before training, after episode 50, and after episode 100. It also saves the
+training paths from episodes 1, 10, and 100.
+
+\begin{center}
+\captionof{table}{Parameters and the reason for using them in this example.}
+\footnotesize
+\begin{tabularx}{0.96\textwidth}{@{}p{0.23\textwidth}p{0.18\textwidth}Y@{}}
+  \toprule
+  \textbf{Setting} & \textbf{Value} & \textbf{Reason} \\
+  \midrule
+  Episodes & 100 & The assignment asks for the 100th training path. \\
+  Learning rate & $\alpha=0.40$ & Changes the table within a short run while retaining part of the old estimate. \\
+  Discount & $\gamma=0.90$ & Passes future step costs back through the maze. \\
+  Exploration & $\max(0.40\cdot0.97^{e-1},0.02)$ & Explores more at the start and becomes more consistent later. \\
+  Reward & $-1$ per legal move & Gives shorter successful routes a better return. \\
+  Episode limit & 200 steps & Stops an unsuccessful episode from running forever. \\
+  Random seed & 7 & Makes the example repeatable. \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Q-learning method}
+
+For a transition from $s$ to $s'$ after action $a$, the code applies the off-policy Q-learning update from
+the lecture:
+\begin{equation}
+Q(s,a)\leftarrow Q(s,a)+\alpha\left[r+\gamma\max_{a'\in A(s')}Q(s',a')-Q(s,a)\right].
+\end{equation}
+Only permitted actions are included in $A(s')$. At the goal, the future term is zero. For the first update, all
+stored values are zero, so
+\[
+Q_{\mathrm{new}}=0+0.40[-1+0.90(0)-0]=-0.40.
+\]
+
+Training uses epsilon-greedy action selection. Epsilon begins at $0.40$, is multiplied by $0.97$ after each
+episode, and does not fall below $0.02$:
+\[
+\varepsilon_e=\max(0.40\cdot0.97^{e-1},0.02).
+\]
+Most moves therefore use a current best action, while some moves explore. Equal best actions are chosen
+randomly during training. The final policy check sets $\varepsilon=0$.
+
+\newpage
+\section{Training results}
+
+The first episode takes 36 steps. Episode 10 takes 22, and episode 100 takes 10. The first ten episodes
+average 51.6 steps; the last ten average 10.2. All 100 training episodes reach the goal, and the first
+10-step training route appears at episode 30.
+
+\begin{center}
+  \includegraphics[width=0.62\textwidth]{output/figures/01_learning_curve.png}
+  \captionof{figure}{The light line shows every episode. The darker line averages the latest ten episodes.}
+\end{center}
+
+\begin{center}
+  \includegraphics[width=0.94\textwidth]{output/figures/02_training_trajectories.png}
+  \captionof{figure}{Training paths saved at episodes 1, 10, and 100. Repeated segments come from exploration.}
+\end{center}
+
+The episode-100 path happens to be shortest in this seeded run. It is still a training sample, not a clean
+test of the learned policy, because epsilon is still $0.02$. That distinction is why the program saves a
+separate greedy evaluation.
+
+\newpage
+\section{Q-values and final policy}
+
+\begin{center}
+  \includegraphics[width=0.96\textwidth]{output/figures/03_q_values.png}
+  \captionof{figure}{Best legal action and its Q-value before training, after episode 50, and after episode 100.}
+\end{center}
+
+Before training, every entry is zero. Values near the goal are learned first, then the estimates move back
+through the maze. After episode 100, the best value at the start is $-5.6128$. The Q-value is not simply
+$-10$ because future rewards are discounted by $\gamma=0.90$.
+
+\begin{center}
+\begin{minipage}[c]{0.46\textwidth}
+  \centering
+  \includegraphics[width=0.88\linewidth]{output/figures/04_greedy_evaluation.png}
+  \captionof{figure}{Greedy evaluation after training.}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.48\textwidth}
+  \small
+  \textbf{Final check}
+
+  The greedy policy reaches the goal in 10 steps. It is therefore a shortest path for this layout. No
+  exploration is used and the Q-table is left unchanged.
+\end{minipage}
+\end{center}
+
+\section{Conclusion}
+
+This report implements Q-learning loop in one small maze in Rust language. Epsilon-greedy exploration is
+used during training. The separate check with epsilon set to zero then tests the learned policy without
+random actions or further Q updates.
+
+\setlength{\multicolsep}{3pt}
+\begin{multicols}{2}[\section*{References and reproduction}]
+\small
+\textbf{Reference.} Y. Kobayashi, \textit{Reinforcement Learning}, lecture slides, 11 August 2026,
+\columnbreak
+\end{multicols}
+
+\end{document}
