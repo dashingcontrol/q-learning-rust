@@ -113,9 +113,13 @@ average 51.6 steps; the last ten average 10.2. All 100 training episodes reach t
   \captionof{figure}{Training paths saved at episodes 1, 10, and 100. Repeated segments come from exploration.}
 \end{center}
 
-The episode-100 path happens to be shortest in this seeded run. It is still a training sample, not a clean
-test of the learned policy, because epsilon is still $0.02$. That distinction is why the program saves a
-separate greedy evaluation.
+Figure 2 shows how the route changes during learning. In episode 1 the agent revisits several cells and needs
+36 steps to reach the goal. By episode 10 it follows most of the useful route, but exploratory moves create
+detours and the path still takes 22 steps. Episode 100 reaches the goal in 10 steps, which is the shortest
+possible path length for this maze.
+
+These paths include the exploration used during training. The separate evaluation on page 3 sets epsilon to
+zero and follows only the best actions stored in the final Q-table.
 
 \newpage
 \section{Q-values and final policy}
